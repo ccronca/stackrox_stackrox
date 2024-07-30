@@ -17,7 +17,7 @@ Please avoid adding duplicate information across this changelog and JIRA/doc inp
 
 ### Removed Features
 
-### Deprecated Fatures
+### Deprecated Features
 
 ### Technical Changes
 
