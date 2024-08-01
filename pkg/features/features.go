@@ -3,7 +3,10 @@ package features
 
 import (
 	"fmt"
+	"slices"
 	"strings"
+
+	"github.com/stackrox/rox/pkg/logging"
 )
 
 // A FeatureFlag is a product behavior that can be enabled or disabled using an
@@ -13,12 +16,13 @@ type FeatureFlag interface {
 	EnvVar() string
 	Enabled() bool
 	Default() bool
-	Stage() string
 }
 
 var (
 	// Flags contains all defined FeatureFlags by name.
 	Flags = make(map[string]FeatureFlag)
+
+	log = logging.LoggerForModule()
 )
 
 // registerFeature registers and returns a new feature flag, configured with the
@@ -36,4 +40,25 @@ func registerFeature(name, envVar string, options ...option) FeatureFlag {
 	}
 	Flags[f.envVar] = f
 	return f
+}
+
+func sortEnvVars() []string {
+	sortedEnvVars := []string{}
+	for envVar := range Flags {
+		sortedEnvVars = append(sortedEnvVars, envVar)
+	}
+	slices.Sort(sortedEnvVars)
+	return sortedEnvVars
+}
+
+// LogFeatureFlags logs the global state of all features flags.
+func LogFeatureFlags() {
+	data := []interface{}{}
+	for _, envVar := range sortEnvVars() {
+		flag := Flags[envVar]
+		data = append(data, logging.Any(flag.EnvVar(), flag.Enabled()))
+	}
+	if len(data) > 0 {
+		log.Infow("Feature flags", data...)
+	}
 }

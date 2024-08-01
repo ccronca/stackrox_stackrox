@@ -3,6 +3,8 @@
 ## IMPORTANT
 All migrations must be backwards compatible in order to ensure a safe and successful rollback.
 
+Please review the [overview](OVERVIEW.md) for details on the upgrade and migration process.
+
 ## Purpose of database migrations
 
 When changing the data model for stored objects, data conversions may be required. All migrations
@@ -307,7 +309,7 @@ schema and conversion functions.
 More examples with test protobuf objects are available in `migrator/migrations/postgreshelper/schema`
 ```go
 func convertVulnerabilityRequestFromProto(obj *storage.VulnerabilityRequest) (*schema.VulnerabilityRequests, error) {
-        serialized, err := obj.Marshal()
+        serialized, err := obj.MarshalVT()
         if err != nil {
                 return nil, err
         }

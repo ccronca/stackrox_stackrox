@@ -10,7 +10,6 @@ type feature struct {
 	name         string
 	defaultValue bool
 	unchangeable bool
-	techPreview  bool
 }
 
 func (f *feature) EnvVar() string {
@@ -38,11 +37,4 @@ func (f *feature) Enabled() bool {
 	default:
 		return f.defaultValue
 	}
-}
-
-func (f *feature) Stage() string {
-	if f.techPreview {
-		return "tech-preview"
-	}
-	return "dev-preview"
 }
