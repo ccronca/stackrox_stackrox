@@ -195,7 +195,10 @@
     "RuntimeFeatureConfigRuntimeRule": {
       "type": "object",
       "properties": {
-        "resourceCollection": {
+        "id": {
+          "type": "string"
+        },
+        "configResourceCollection": {
           "$ref": "#/definitions/commonapiConfigResourceCollection"
         },
         "status": {

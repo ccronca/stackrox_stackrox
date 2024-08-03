@@ -162,7 +162,8 @@ func (m *RuntimeFeatureConfig_RuntimeRule) CloneVT() *RuntimeFeatureConfig_Runti
 		return (*RuntimeFeatureConfig_RuntimeRule)(nil)
 	}
 	r := new(RuntimeFeatureConfig_RuntimeRule)
-	r.ResourceCollection = m.ResourceCollection.CloneVT()
+	r.Id = m.Id
+	r.ConfigResourceCollection = m.ConfigResourceCollection.CloneVT()
 	r.Status = m.Status.CloneVT()
 	if len(m.unknownFields) > 0 {
 		r.unknownFields = make([]byte, len(m.unknownFields))
@@ -470,7 +471,10 @@ func (this *RuntimeFeatureConfig_RuntimeRule) EqualVT(that *RuntimeFeatureConfig
 	} else if this == nil || that == nil {
 		return false
 	}
-	if !this.ResourceCollection.EqualVT(that.ResourceCollection) {
+	if this.Id != that.Id {
+		return false
+	}
+	if !this.ConfigResourceCollection.EqualVT(that.ConfigResourceCollection) {
 		return false
 	}
 	if !this.Status.EqualVT(that.Status) {
@@ -936,15 +940,22 @@ func (m *RuntimeFeatureConfig_RuntimeRule) MarshalToSizedBufferVT(dAtA []byte) (
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0x1a
 	}
-	if m.ResourceCollection != nil {
-		size, err := m.ResourceCollection.MarshalToSizedBufferVT(dAtA[:i])
+	if m.ConfigResourceCollection != nil {
+		size, err := m.ConfigResourceCollection.MarshalToSizedBufferVT(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
 		i -= size
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Id) > 0 {
+		i -= len(m.Id)
+		copy(dAtA[i:], m.Id)
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.Id)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1203,8 +1214,12 @@ func (m *RuntimeFeatureConfig_RuntimeRule) SizeVT() (n int) {
 	}
 	var l int
 	_ = l
-	if m.ResourceCollection != nil {
-		l = m.ResourceCollection.SizeVT()
+	l = len(m.Id)
+	if l > 0 {
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	if m.ConfigResourceCollection != nil {
+		l = m.ConfigResourceCollection.SizeVT()
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.Status != nil {
@@ -1842,7 +1857,39 @@ func (m *RuntimeFeatureConfig_RuntimeRule) UnmarshalVT(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ResourceCollection", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Id = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConfigResourceCollection", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1869,14 +1916,14 @@ func (m *RuntimeFeatureConfig_RuntimeRule) UnmarshalVT(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.ResourceCollection == nil {
-				m.ResourceCollection = &ConfigResourceCollection{}
+			if m.ConfigResourceCollection == nil {
+				m.ConfigResourceCollection = &ConfigResourceCollection{}
 			}
-			if err := m.ResourceCollection.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ConfigResourceCollection.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		case 2:
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
 			}

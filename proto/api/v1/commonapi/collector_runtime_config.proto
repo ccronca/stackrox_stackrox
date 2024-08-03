@@ -43,8 +43,9 @@ message ConfigResourceCollection {
 
 message RuntimeFeatureConfig {
   message RuntimeRule {
-    ConfigResourceCollection resource_collection = 1;
-    Status status = 2;
+    string id = 1;
+    ConfigResourceCollection config_resource_collection = 2;
+    Status status = 3;
   }
 
   RuntimeFeature feature = 1;
