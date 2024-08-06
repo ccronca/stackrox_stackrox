@@ -128,11 +128,6 @@ type CentralComponentSpec struct {
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,order=4
 	Monitoring *Monitoring `json:"monitoring,omitempty"`
 
-	// Configures how Central should store its persistent data. You can choose between using a persistent
-	// volume claim (recommended default), and a host path.
-	//+operator-sdk:csv:customresourcedefinitions:type=spec,order=5
-	Persistence *Persistence `json:"persistence,omitempty"`
-
 	// Settings for Central DB, which is responsible for data persistence.
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,order=6,displayName="Central DB Settings"
 	DB *CentralDBSpec `json:"db,omitempty"`
@@ -160,14 +155,6 @@ func (c *CentralComponentSpec) GetDB() *CentralDBSpec {
 		return nil
 	}
 	return c.DB
-}
-
-// GetPersistence returns Central's persistence config
-func (c *CentralComponentSpec) GetPersistence() *Persistence {
-	if c == nil {
-		return nil
-	}
-	return c.Persistence
 }
 
 // GetAdminPasswordSecret provides a way to retrieve the admin password that is safe to use on a nil receiver object.

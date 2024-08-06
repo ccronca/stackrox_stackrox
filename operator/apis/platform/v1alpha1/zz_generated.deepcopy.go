@@ -186,11 +186,6 @@ func (in *CentralComponentSpec) DeepCopyInto(out *CentralComponentSpec) {
 		*out = new(Monitoring)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.Persistence != nil {
-		in, out := &in.Persistence, &out.Persistence
-		*out = new(Persistence)
-		(*in).DeepCopyInto(*out)
-	}
 	if in.DB != nil {
 		in, out := &in.DB, &out.DB
 		*out = new(CentralDBSpec)
