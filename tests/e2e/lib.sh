@@ -34,6 +34,8 @@ deploy_stackrox() {
 
     export_central_basic_auth_creds
     wait_for_api "${central_namespace}"
+    export_central_cert "${central_namespace}"
+
     setup_client_TLS_certs "${tls_client_certs}"
     record_build_info "${central_namespace}"
 
@@ -363,7 +365,7 @@ deploy_sensor_via_operator() {
     local central_endpoint="central.${central_namespace}.svc:443"
 
     info "Deploying sensor via operator into namespace ${sensor_namespace} (central is expected in namespace ${central_namespace})"
-
+    export_central_cert "${central_namespace}"
     if ! kubectl get ns "${sensor_namespace}" >/dev/null 2>&1; then
         kubectl create ns "${sensor_namespace}"
     fi
@@ -452,6 +454,28 @@ export_central_basic_auth_creds() {
     ROX_USERNAME="admin"
     ci_export "ROX_USERNAME" "$ROX_USERNAME"
     ci_export "ROX_PASSWORD" "$ROX_PASSWORD"
+}
+
+export_central_cert() {
+    ci_export ROX_SERVER_NAME "central.${1:-stackrox}"
+    if [[ -f "${ROX_CA_CERT_FILE:-}" ]]; then
+        info "(e2e) Using central certificate from ${ROX_CA_CERT_FILE} ($(md5sum "${ROX_CA_CERT_FILE}"))"
+        openssl x509 -in "${ROX_CA_CERT_FILE}" -subject -issuer -noout
+        return
+    fi
+    require_environment "API_ENDPOINT"
+    require_environment "ROX_PASSWORD"
+
+    local central_cert
+    central_cert="$(mktemp -d)/central_cert.pem"
+    info "Storing central certificate in ${central_cert}"
+
+    roxctl -e "$API_ENDPOINT" -p "$ROX_PASSWORD" \
+        central cert --insecure-skip-tls-verify 1>"$central_cert"
+
+    ci_export ROX_CA_CERT_FILE "$central_cert"
+    openssl x509 -in "${ROX_CA_CERT_FILE}" -subject -issuer -noout
+    info "md5sum $(md5sum "${ROX_CA_CERT_FILE}")"
 }
 
 deploy_optional_e2e_components() {
@@ -1164,6 +1188,7 @@ db_backup_and_restore_test() {
 
     # Ensure central is ready for requests after any previous tests
     wait_for_api "${central_namespace}"
+    export_central_cert "${central_namespace}"
 
     info "Backing up to ${output_dir}"
     mkdir -p "$output_dir"

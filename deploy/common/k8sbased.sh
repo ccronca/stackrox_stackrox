@@ -588,6 +588,29 @@ function launch_central {
     echo "Access the UI at: https://${API_ENDPOINT}"
 }
 
+function export_central_cert {
+    ROX_SERVER_NAME="central.${CENTRAL_NAMESPACE:-stackrox}"
+    export ROX_SERVER_NAME
+    if [[ -f "${ROX_CA_CERT_FILE:-}" ]]; then
+        echo "Using central certificate from ${ROX_CA_CERT_FILE} ($(md5sum "${ROX_CA_CERT_FILE}"))"
+        openssl x509 -in "${ROX_CA_CERT_FILE}" -subject -issuer -noout
+        return
+    fi
+
+    local central_cert
+    central_cert="$(mktemp -d)/central_cert.pem"
+    echo "Storing central certificate in ${central_cert}"
+
+    roxctl -e "$API_ENDPOINT" -p "$ROX_ADMIN_PASSWORD" \
+        central cert --insecure-skip-tls-verify 1>"$central_cert"
+
+    ROX_CA_CERT_FILE="$central_cert"
+    export ROX_CA_CERT_FILE
+
+    openssl x509 -in "${ROX_CA_CERT_FILE}" -subject -issuer -noout
+    echo "md5sum $(md5sum "${ROX_CA_CERT_FILE}")"
+}
+
 function launch_sensor {
     local k8s_dir="$1"
     local sensor_namespace=${SENSOR_NAMESPACE:-stackrox}
@@ -770,10 +793,14 @@ function launch_sensor {
     else
       if [[ -x "$(command -v roxctl)" && "$(roxctl version)" == "$MAIN_IMAGE_TAG" ]]; then
         [[ -n "${ROX_ADMIN_PASSWORD}" ]] || { echo >&2 "ROX_ADMIN_PASSWORD not found! Cannot launch sensor."; return 1; }
+        export_central_cert
+        echo "central cert file from var: $ROX_CA_CERT_FILE"
+        roxctl -p "${ROX_ADMIN_PASSWORD}" --endpoint "${API_ENDPOINT}" --ca "${ROX_CA_CERT_FILE}" central whoami
         roxctl -p "${ROX_ADMIN_PASSWORD}" --endpoint "${API_ENDPOINT}" sensor generate --main-image-repository="${MAIN_IMAGE_REPO}" --central="$CLUSTER_API_ENDPOINT" --name="$CLUSTER" \
              --collection-method="$COLLECTION_METHOD" \
              "${ORCH}" \
              "${extra_config[@]+"${extra_config[@]}"}"
+        echo "continue..."
         mv "sensor-${CLUSTER}" "$k8s_dir/sensor-deploy"
         if [[ "${GENERATE_SCANNER_DEPLOYMENT_BUNDLE:-}" == "true" ]]; then
             roxctl -p "${ROX_ADMIN_PASSWORD}" --endpoint "${API_ENDPOINT}" scanner generate \
