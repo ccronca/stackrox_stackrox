@@ -45,22 +45,11 @@ service CollectorRuntimeConfigService {
     option (google.api.http) = {get: "/v1/collector_runtime_config"};
   }
 
-  rpc PostCollectorRuntimeConfig(CollectorRuntimeConfigRequest) returns (Empty) {
-    option (google.api.http) = {
-      post: "/v1/collector_runtime_config"
-      body: "*"
-    };
-  }
-
   rpc PatchCollectorRuntimeConfig(CollectorRuntimeConfigRequest) returns (Empty) {
     option (google.api.http) = {
       patch: "/v1/collector_runtime_config"
       body: "*"
     };
-  }
-
-  rpc DeleteCollectorRuntimeConfig(DeleteCollectorRuntimeConfigRequest) returns (Empty) {
-    option (google.api.http) = {delete: "/v1/collector_runtime_config/id/{id}"};
   }
 
   rpc DryRunCollectorRuntimeConfig(CollectorRuntimeConfigRequest) returns (DryRunCollectorRuntimeConfigResponse) {
