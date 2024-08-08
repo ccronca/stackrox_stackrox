@@ -128,21 +128,27 @@ type CentralComponentSpec struct {
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,order=4
 	Monitoring *Monitoring `json:"monitoring,omitempty"`
 
+	// Deprecated field. This field exists solely for backward compatibility starting from version v4.6.0.
+	// Configures how Central should store its persistent data. You can choose between using a persistent
+	// volume claim (recommended default), and a host path.
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:hidden"}
+	Persistence *Persistence `json:"persistence,omitempty"`
+
 	// Settings for Central DB, which is responsible for data persistence.
-	//+operator-sdk:csv:customresourcedefinitions:type=spec,order=6,displayName="Central DB Settings"
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,order=5,displayName="Central DB Settings"
 	DB *CentralDBSpec `json:"db,omitempty"`
 
 	// Configures telemetry settings for Central. If enabled, Central transmits telemetry and diagnostic
 	// data to a remote storage backend.
-	//+operator-sdk:csv:customresourcedefinitions:type=spec,order=7,displayName="Telemetry",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:hidden"}
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,order=6,displayName="Telemetry",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:hidden"}
 	Telemetry *Telemetry `json:"telemetry,omitempty"`
 
 	// Configures resources within Central in a declarative manner.
-	//+operator-sdk:csv:customresourcedefinitions:type=spec,order=8,displayName="Declarative Configuration",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:hidden"}
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,order=7,displayName="Declarative Configuration",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:hidden"}
 	DeclarativeConfiguration *DeclarativeConfiguration `json:"declarativeConfiguration,omitempty"`
 
 	// Configures the encryption of notifier secrets stored in the Central DB.
-	//+operator-sdk:csv:customresourcedefinitions:type=spec,order=9,displayName="Notifier Secrets Encryption",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:hidden"}
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,order=8,displayName="Notifier Secrets Encryption",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:hidden"}
 	NotifierSecretsEncryption *NotifierSecretsEncryption `json:"notifierSecretsEncryption,omitempty"`
 
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,order=99
