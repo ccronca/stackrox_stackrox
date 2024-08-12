@@ -28,13 +28,13 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - name: Parse RELEASE_VERSION
+    - name: Parse VULNERABILITY_BUNDLE_VERSION
       id: set-versions
       run: |
-        versions=$(grep -v '^#' scanner/updater/version/RELEASE_VERSION | awk -F, '{print $1 "-" $2}')
-        echo "::set-output name=versions::${versions}"
-    - name: Debug - Print parsed versions
-      run: echo "Parsed versions - ${{ steps.set-versions.outputs.versions }}"
+        versions=$(grep -v '^#' scanner/updater/version/VULNERABILITY_BUNDLE_VERSION | awk -F, '{print $1 "|" $2}' | paste -sd "," -)
+        versions_json="[\"${versions//,/\",\"}\"]"
+        echo "Versions JSON: ${versions_json}"
+        echo "versions=${versions_json}" >> "$GITHUB_OUTPUT"
 
   prepare-environment:
     needs: parse-versions
@@ -71,10 +71,8 @@ jobs:
       run: |
         if [ "${{ github.event_name }}" == "schedule" ]; then
           echo "MANUAL_URL=https://raw.githubusercontent.com/stackrox/stackrox/master/scanner/updater/manual/vulns.yaml" >> "$GITHUB_ENV"
-          echo "::set-output name=manual_url::https://raw.githubusercontent.com/stackrox/stackrox/master/scanner/updater/manual/vulns.yaml"
         else
           echo "MANUAL_URL=https://raw.githubusercontent.com/stackrox/stackrox/${{ github.event.pull_request.head.sha }}/scanner/updater/manual/vulns.yaml" >> "$GITHUB_ENV"
-          echo "::set-output name=manual_url::https://raw.githubusercontent.com/stackrox/stackrox/${{ github.event.pull_request.head.sha }}/scanner/updater/manual/vulns.yaml"
         fi
 
     - uses: ./.github/actions/upload-artifact-with-retry
@@ -88,23 +86,36 @@ jobs:
     - parse-versions
     - prepare-environment
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        version-branch: ${{ fromJson(needs.parse-versions.outputs.versions) }}
     container:
       image: quay.io/stackrox-io/apollo-ci:stackrox-test-0.3.69
+      volumes:
+      # The updater makes heavy use of /tmp files.
+      - /tmp:/tmp
+      - /usr:/mnt/usr
+      - /opt:/mnt/opt
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        vb: ${{ fromJson(needs.parse-versions.outputs.versions) }}
     steps:
     - name: Split version and branch
       id: split
       run: |
-        IFS="-" read -r version branch <<< "${{ matrix.version-branch }}"
-        echo "::set-output name=version::${version}"
-        echo "::set-output name=branch::${branch}}"
+        IFS="|" read -r version branch <<< "${{ matrix.vb }}"
+        echo "version=${version}" >> "$GITHUB_OUTPUT"
+        echo "branch=${branch}" >> "$GITHUB_OUTPUT"
 
-    - name: Debug - Print version and branch
+    - name: Free up disk space
+      shell: bash
       run: |
-        echo "Version: ${{ steps.split.outputs.version }}"
-        echo "Branch: ${{ steps.split.outputs.branch }}"
+        set +e
+        set -x
+        df -h
+        for delete in /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL; do
+          rm -rf "/mnt${delete:?}"
+        done
+        df -h
 
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -116,91 +127,39 @@ jobs:
       with:
         gcp-account: ${{ secrets.GCP_SERVICE_ACCOUNT_STACKROX_CI }}
 
-    - uses: ./.github/actions/cache-go-dependencies
-
     - name: Build updater
       run: |
         echo "Building updater for version ${{ steps.split.outputs.version }} on branch ${{ steps.split.outputs.branch }}..."
         make tag
         make -C scanner bin/updater
 
-    - uses: ./.github/actions/upload-artifact-with-retry
+    - name: Upload Updater Artifact
+      uses: actions/upload-artifact@v4
       with:
-        name: updater
+        name: updater-${{ steps.split.outputs.version }}
         path: scanner/bin/updater
         if-no-files-found: error
 
-    - uses: ./.github/actions/download-artifact-with-retry
+    - name: Download NVD
+      uses: ./.github/actions/download-artifact-with-retry
       with:
         name: nvd
         path: nvd.zip
 
-    - name: Set updater
+    - name: Set Updater
       run: |
-        chmod +x /usr/local/bin/updater
+        chmod +x scanner/bin/updater
         mkdir vulns
 
-    - name: Run updater (single bundle)
+    - name: Run Updater (single bundle)
       env:
         STACKROX_NVD_ZIP_PATH: nvd.zip
-      run: |
-        echo "Running updater for version ${{ steps.split.outputs.version }} with manual URL ${{ needs.prepare-environment.outputs.manual_url }}..."
-        updater export vulns --manual-url "${{ needs.prepare-environment.outputs.manual_url }}"
+      run: scanner/bin/updater export vulns --manual-url "${{ needs.prepare-environment.outputs.manual_url }}"
 
     - name: Run updater (multi bundle)
       env:
         STACKROX_NVD_ZIP_PATH: nvd.zip
       run: |
         echo "Running multi-bundle updater for version ${{ steps.split.outputs.version }} with manual URL ${{ needs.prepare-environment.outputs.manual_url }}..."
-        updater export --manual-url "${{ needs.prepare-environment.outputs.manual_url }}" --split bundles
+        scanner/bin/updater export --manual-url "${{ needs.prepare-environment.outputs.manual_url }}" --split bundles
         zip vulns/vulnerabilities.zip bundles/*.json.zst
-
-    - uses: ./.github/actions/upload-artifact-with-retry
-      with:
-        name: vulns
-        path: vulns
-        if-no-files-found: error
-
-    - name: Authenticate with Google Cloud
-      if: github.event_name == 'schedule'
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: ${{ secrets.GOOGLE_SA_STACKROX_HUB_VULN_DUMP_UPLOADER }}
-
-    - name: Authenticate with Google Cloud
-      if: github.event_name == 'pull_request'
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: ${{ secrets.GOOGLE_SA_CIRCLECI_SCANNER }}
-
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v2
-
-    - name: Debug - Print upload path
-      run: |
-        echo "Uploading vulnerabilities to gs://definitions.stackrox.io/v4/vulnerability-bundles/${{ steps.split.outputs.version }}/"
-
-    - name: Upload vulnerabilities to specific path
-      run: |
-        cd vulns
-        gsutil -m cp -r . gs://definitions.stackrox.io/v4/vulnerability-bundles/${{ steps.split.outputs.version }}/
-
-    - name: Upload vulnerabilities to downstream path
-      if: github.event_name == 'schedule'
-      run: |
-        cd vulns
-        gsutil -m cp -r . gs://definitions.stackrox.io/v4/vulnerability-bundles/1.0.0/
-
-    - name: Update PR vulnerabilities
-      if: github.event_name == 'pull_request'
-      run: |
-        branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
-        # Replace / with -, so the branch name isn't truncated when pushed to GCS.
-        dir=${branch////-}
-        case $dir in
-        dev|1.0.0)
-          echo "Branch $dir is disallowed"
-          exit 1
-        esac
-        cd vulns
-        gsutil cp -r . "gs://scanner-v4-test/vulnerability-bundles/$dir"
