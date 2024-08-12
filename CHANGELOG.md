@@ -18,6 +18,8 @@ Please avoid adding duplicate information across this changelog and JIRA/doc inp
 ### Deprecated Fatures
 
 ### Technical Changes
+- ROX-20578: Sensor will now store pull secrets by secret name and registry host (instead of only registry host). This will reduce Delegated Scanning authentication failures when multiple secrets exist for the same registry within a namespace.
+  - Setting `ROX_SENSOR_PULL_SECRETS_BY_NAME` to `false` on Sensor will disable this feature and cause secrets to be stored by only registry host.
 
 ## [4.5.0]
 
