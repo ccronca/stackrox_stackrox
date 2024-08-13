@@ -13,7 +13,7 @@ function escape() {
 function roxcurl() {
   local url="$1"
   shift
-  curl --config <(escape user "admin:${ROX_PASSWORD}") -k "https://${API_ENDPOINT}${url}" "$@"
+  curl --config <(escape user "admin:${ROX_ADMIN_PASSWORD}") -k "https://${API_ENDPOINT}${url}" "$@"
 }
 
 function kcr() {

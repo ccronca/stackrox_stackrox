@@ -32,7 +32,7 @@ escape() {
 roxcurl() {
     local url="$1"
     shift
-    curl -sk --config <(escape user "admin:${ROX_PASSWORD}") -k "https://${API_ENDPOINT}${url}" "$@"
+    curl -sk --config <(escape user "admin:${ROX_ADMIN_PASSWORD}") -k "https://${API_ENDPOINT}${url}" "$@"
 }
 
 is_release_version() {

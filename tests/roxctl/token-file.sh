@@ -1,9 +1,9 @@
 #! /usr/bin/env bash
 
-# This test script requires API_ENDPOINT and ROX_PASSWORD to be set in the environment.
+# This test script requires API_ENDPOINT and ROX_ADMIN_PASSWORD to be set in the environment.
 
 [ -n "$API_ENDPOINT" ]
-[ -n "$ROX_PASSWORD" ]
+[ -n "$ROX_ADMIN_PASSWORD" ]
 
 echo "Using API_ENDPOINT $API_ENDPOINT"
 
@@ -20,7 +20,7 @@ escape() {
 # Retrieve API token
 TOKEN_FILE=$(mktemp)
 curl -k -f \
-  --config <(escape user "admin:$ROX_PASSWORD") \
+  --config <(escape user "admin:$ROX_ADMIN_PASSWORD") \
   -d '{"name": "test", "role": "Admin"}' \
   --retry 5 \
   --retry-connrefused \
@@ -80,7 +80,6 @@ test_roxctl_cmd() {
 
   # Verify that a password on the command line has precedence over token in the environment
   if OUTPUT=$(ROX_API_TOKEN="invalid-token" roxctl --insecure-skip-tls-verify --insecure -e "$API_ENDPOINT" \
-    --password "$ROX_PASSWORD" \
     "$@" \
     2>&1); then
       echo "[OK] --password has precedence over ROX_API_TOKEN environment variable"
