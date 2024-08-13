@@ -461,7 +461,7 @@ export_central_basic_auth_creds() {
 export_central_cert() {
     ci_export ROX_SERVER_NAME "central.${1:-stackrox}"
     if [[ -f "${ROX_CA_CERT_FILE:-}" ]]; then
-        info "(e2e) Using central certificate from ${ROX_CA_CERT_FILE}"
+        info "Using central certificate from ${ROX_CA_CERT_FILE}"
         openssl x509 -in "${ROX_CA_CERT_FILE}" -subject -issuer -noout
         return
     fi
