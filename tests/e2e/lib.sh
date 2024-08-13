@@ -345,6 +345,7 @@ deploy_sensor() {
         fi
 
         DEPLOY_DIR="deploy/${ORCHESTRATOR_FLAVOR}"
+        ROX_CA_CERT_FILE="" # force sensor.sh to fetch the actual cert.
         CENTRAL_NAMESPACE="${central_namespace}" SENSOR_NAMESPACE="${sensor_namespace}" "${ROOT}/${DEPLOY_DIR}/sensor.sh"
     fi
 
@@ -365,6 +366,7 @@ deploy_sensor_via_operator() {
     local central_endpoint="central.${central_namespace}.svc:443"
 
     info "Deploying sensor via operator into namespace ${sensor_namespace} (central is expected in namespace ${central_namespace})"
+    ROX_CA_CERT_FILE="" # force sensor.sh to fetch the actual cert.
     export_central_cert "${central_namespace}"
     if ! kubectl get ns "${sensor_namespace}" >/dev/null 2>&1; then
         kubectl create ns "${sensor_namespace}"
@@ -459,7 +461,7 @@ export_central_basic_auth_creds() {
 export_central_cert() {
     ci_export ROX_SERVER_NAME "central.${1:-stackrox}"
     if [[ -f "${ROX_CA_CERT_FILE:-}" ]]; then
-        info "(e2e) Using central certificate from ${ROX_CA_CERT_FILE} ($(md5sum "${ROX_CA_CERT_FILE}"))"
+        info "(e2e) Using central certificate from ${ROX_CA_CERT_FILE}"
         openssl x509 -in "${ROX_CA_CERT_FILE}" -subject -issuer -noout
         return
     fi
@@ -475,7 +477,6 @@ export_central_cert() {
 
     ci_export ROX_CA_CERT_FILE "$central_cert"
     openssl x509 -in "${ROX_CA_CERT_FILE}" -subject -issuer -noout
-    info "md5sum $(md5sum "${ROX_CA_CERT_FILE}")"
 }
 
 deploy_optional_e2e_components() {
