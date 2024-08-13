@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v4.25.3
-// source: api/v1/collector_runtime_configuration_service.proto
+// source: api/v1/collector_runtime_config_service.proto
 
 package v1
 
@@ -177,5 +177,5 @@ var CollectorRuntimeConfigService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v1/collector_runtime_configuration_service.proto",
+	Metadata: "api/v1/collector_runtime_config_service.proto",
 }

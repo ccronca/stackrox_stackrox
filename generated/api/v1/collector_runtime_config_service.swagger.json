@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "api/v1/collector_runtime_configuration_service.proto",
+    "title": "api/v1/collector_runtime_config_service.proto",
     "version": "version not set"
   },
   "tags": [
