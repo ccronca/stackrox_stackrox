@@ -92,6 +92,8 @@ test_upgrade_paths() {
     deploy_earlier_postgres_central
     wait_for_api
     setup_client_TLS_certs
+    # shellcheck disable=SC2034
+    ROX_CA_CERT_FILE=""
     export_central_cert
 
     restore_4_1_backup
