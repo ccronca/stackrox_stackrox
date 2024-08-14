@@ -163,3 +163,52 @@ jobs:
         echo "Running multi-bundle updater for version ${{ steps.split.outputs.version }} with manual URL ${{ needs.prepare-environment.outputs.manual_url }}..."
         scanner/bin/updater export --manual-url "${{ needs.prepare-environment.outputs.manual_url }}" --split bundles
         zip vulns/vulnerabilities.zip bundles/*.json.zst
+    - uses: ./.github/actions/upload-artifact-with-retry
+      with:
+        name: vulns
+        path: vulns
+        if-no-files-found: error
+
+    - name: Authenticate with Google Cloud
+      if: github.event_name == 'schedule'
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GOOGLE_SA_STACKROX_HUB_VULN_DUMP_UPLOADER }}
+
+    - name: Authenticate with Google Cloud
+      if: github.event_name == 'pull_request'
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GOOGLE_SA_CIRCLECI_SCANNER }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Debug - Print upload path
+      run: |
+        echo "Uploading vulnerabilities to gs://definitions.stackrox.io/v4/vulnerability-bundles/${{ steps.split.outputs.version }}/"
+
+    - name: Upload vulnerabilities to specific path
+      run: |
+        cd vulns
+        gsutil -m cp -r . gs://definitions.stackrox.io/v4/vulnerability-bundles/${{ steps.split.outputs.version }}/
+
+    - name: Upload vulnerabilities to downstream path
+      if: github.event_name == 'schedule'
+      run: |
+        cd vulns
+        gsutil -m cp -r . gs://definitions.stackrox.io/v4/vulnerability-bundles/1.0.0/
+
+    - name: Update PR vulnerabilities
+      if: github.event_name == 'pull_request'
+      run: |
+        branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
+        # Replace / with -, so the branch name isn't truncated when pushed to GCS.
+        dir=${branch////-}
+        case $dir in
+        dev|1.0.0)
+          echo "Branch $dir is disallowed"
+          exit 1
+        esac
+        cd vulns
+        gsutil cp -r . "gs://scanner-v4-test/vulnerability-bundles/$dir"
