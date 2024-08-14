@@ -601,6 +601,8 @@ function export_central_cert {
     central_cert="$(mktemp -d)/central_cert.pem"
     echo "Storing central certificate in ${central_cert}"
 
+    export LOGLEVEL=debug
+
     roxctl -e "$API_ENDPOINT" -p "$ROX_ADMIN_PASSWORD" \
         central cert --insecure-skip-tls-verify 1>"$central_cert"
 

@@ -20,6 +20,14 @@ export QA_TEST_DEBUG_LOGS="/tmp/qa-tests-backend-logs"
 # `envsubst`` before passing it to `env`.
 envsubst=$(command -v envsubst)
 
+stacktrace() { 
+   local i=1 line file func
+   while read -r line func file < <(caller $i); do
+      echo >&2 "[$i] $file:$line $func(): $(sed -n ${line}p $file)"
+      ((i++))
+   done
+}
+
 # shellcheck disable=SC2120
 deploy_stackrox() {
     local tls_client_certs=${1:-}
@@ -471,7 +479,9 @@ export_central_cert() {
     local central_cert
     central_cert="$(mktemp -d)/central_cert.pem"
     info "Storing central certificate in ${central_cert}"
-
+    stacktrace
+    export LOGLEVEL=debug
+    curl -v "$API_ENDPOINT/v1/ping" -k
     roxctl -e "$API_ENDPOINT" -p "$ROX_PASSWORD" \
         central cert --insecure-skip-tls-verify 1>"$central_cert"
 
