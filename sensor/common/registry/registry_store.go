@@ -550,10 +550,12 @@ func (rs *Store) DeleteSecret(namespace, secretName string) bool {
 		return false
 	}
 
+	var deletedEntries int
+	var deletedBytes int
 	if hostToRegistry, ok := secretNameToHost[secretName]; ok {
-		metrics.DecrementPullSecretEntriesCount(len(hostToRegistry))
+		deletedEntries += len(hostToRegistry)
 		for _, reg := range hostToRegistry {
-			metrics.DecrementPullSecretEntriesSize(reg.Source().SizeVT())
+			deletedBytes += reg.Source().SizeVT()
 		}
 
 		delete(secretNameToHost, secretName)
@@ -564,6 +566,8 @@ func (rs *Store) DeleteSecret(namespace, secretName string) bool {
 		}
 
 		log.Debugf("Deleted secret %q from namespace %q", secretName, namespace)
+		metrics.DecrementPullSecretEntriesCount(deletedEntries)
+		metrics.DecrementPullSecretEntriesSize(deletedBytes)
 		return true
 	}
 
