@@ -67,7 +67,7 @@ var (
 
 func updatePolicies(db *gorm.DB) error {
 
-	return policymigrationhelper.MigratePoliciesWithDiffsAndStoreV2(
+	return policymigrationhelper.MigratePolicyCategoriesWithStoreV2(
 		policyDiffFS,
 		policyDiffs,
 		// Get policy with specified id
@@ -97,15 +97,6 @@ func updatePolicies(db *gorm.DB) error {
 				return errors.Errorf("failed to save policy with id %s", policy.GetId())
 			}
 			return result.Error
-		},
-		func(context.Context) (map[string]string, error) {
-			return nil,nil
-	    },
-		func(ctx context.Context, edge *storage.PolicyCategoryEdge) error {
-			return nil
-		},
-		func(ctx context.Context, edge *storage.PolicyCategoryEdge) error {
-			return nil
 		},
 	)
 }

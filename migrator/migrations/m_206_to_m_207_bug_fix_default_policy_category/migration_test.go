@@ -15,7 +15,6 @@ import (
 	"github.com/stackrox/rox/migrator/types"
 	"github.com/stackrox/rox/pkg/postgres/pgutils"
 	"github.com/stackrox/rox/pkg/sac"
-	"github.com/stackrox/rox/pkg/uuid"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
 )
@@ -33,29 +32,14 @@ func TestMigration(t *testing.T) {
 	suite.Run(t, new(policyMigrationTestSuite))
 }
 
-func simplePolicy(policyID string) *storage.Policy {
-	return &storage.Policy{
-		Id:   policyID,
-		Name: fmt.Sprintf("Policy with id %s", policyID),
-	}
-}
-
 func (s *policyMigrationTestSuite) SetupTest() {
 	s.ctx = sac.WithAllAccess(context.Background())
 
 	s.db = pghelper.ForT(s.T(), false)
 	s.gormDB = s.db.GetGormDB().WithContext(s.ctx)
 	pgutils.CreateTableFromModel(s.ctx, s.db.GetGormDB(), schema.CreateTablePoliciesStmt)
-
-	// insert other un policies that won't be migrated in the db for migration to run successfully
-	policies := []*storage.Policy{
-		simplePolicy(uuid.NewV4().String()),
-		simplePolicy(uuid.NewV4().String()),
-	}
-
-	for _, p := range policies {
-		s.addPolicyToDB(p)
-	}
+	pgutils.CreateTableFromModel(s.ctx, s.db.GetGormDB(), schema.CreateTablePolicyCategoriesStmt)
+	pgutils.CreateTableFromModel(s.ctx, s.db.GetGormDB(), schema.CreateTablePolicyCategoryEdgesStmt)
 }
 
 func (s *policyMigrationTestSuite) TearDownTest() {
@@ -86,7 +70,7 @@ func (s *policyMigrationTestSuite) TestMigration() {
 			s.Require().NoError(result.Error)
 			migratedPolicy, err := schema.ConvertPolicyToProto(&foundPolicies[0])
 			s.Require().NoError(err)
-			s.ElementsMatch(s.T(), migratedPolicy.Categories, afterPolicy.Categories, "categories do not match after migration")
+			s.ElementsMatch(afterPolicy.Categories, migratedPolicy.Categories)
 		})
 	}
 }
