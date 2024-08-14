@@ -603,7 +603,7 @@ function export_central_cert {
 
     export LOGLEVEL=debug
 
-    roxctl -e "$API_ENDPOINT" -p "$ROX_ADMIN_PASSWORD" \
+    roxctl -e "$API_ENDPOINT" \
         central cert --insecure-skip-tls-verify 1>"$central_cert"
 
     ROX_CA_CERT_FILE="$central_cert"
