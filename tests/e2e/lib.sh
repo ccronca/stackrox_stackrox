@@ -20,7 +20,7 @@ export QA_TEST_DEBUG_LOGS="/tmp/qa-tests-backend-logs"
 # `envsubst`` before passing it to `env`.
 envsubst=$(command -v envsubst)
 
-stacktrace() { 
+stacktrace() {
    local i=1 line file func
    while read -r line func file < <(caller $i); do
       echo >&2 "[$i] $file:$line $func(): $(sed -n "${line}p" "$file")"
