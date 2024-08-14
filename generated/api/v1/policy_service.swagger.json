@@ -285,6 +285,50 @@
         ]
       }
     },
+    "/v1/policies/export/custom-resource": {
+      "get": {
+        "summary": "ExportAsCustomResources exports the policies, designed by the policy ids, to be saved as custome resources",
+        "operationId": "PolicyService_ExportAsCustomResources",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "$ref": "#/definitions/v1ExportAsCustomResourcesResponse"
+                },
+                "error": {
+                  "$ref": "#/definitions/googlerpcStatus"
+                }
+              },
+              "title": "Stream result of v1ExportAsCustomResourcesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "policyIds",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "PolicyService"
+        ]
+      }
+    },
     "/v1/policies/from-search": {
       "post": {
         "operationId": "PolicyService_PolicyFromSearch",
@@ -1222,6 +1266,14 @@
     },
     "v1Empty": {
       "type": "object"
+    },
+    "v1ExportAsCustomResourcesResponse": {
+      "type": "object",
+      "properties": {
+        "customResource": {
+          "type": "string"
+        }
+      }
     },
     "v1ExportPoliciesRequest": {
       "type": "object",
