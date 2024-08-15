@@ -552,7 +552,7 @@ func (f FieldLabel) String() string {
 }
 
 func (f FieldLabel) Alias() string {
-	return strings.Join(strings.Fields(string(f)), "_")
+	return strings.ToLower(strings.Join(strings.Fields(string(f)), "_"))
 }
 
 // DerivedFieldLabelMetadata includes metadata showing that a field is derived.
