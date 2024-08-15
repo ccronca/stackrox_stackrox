@@ -313,10 +313,12 @@ var (
 	CVECount        = newDerivedFieldLabel("CVE Count", CVEID, CountDerivationType)
 	ProfileCount    = newDerivedFieldLabel("Compliance Profile Name Count", ComplianceOperatorProfileName, CountDerivationType)
 	// Translative derived fields with reversed sorting. These fields are supported only in pagination.
-	NodePriority                 = newDerivedFieldLabel("Node Risk Priority", NodeRiskScore, SimpleReverseSortDerivationType)
-	DeploymentPriority           = newDerivedFieldLabel("Deployment Risk Priority", DeploymentRiskScore, SimpleReverseSortDerivationType)
-	ImagePriority                = newDerivedFieldLabel("Image Risk Priority", ImageRiskScore, SimpleReverseSortDerivationType)
-	ComponentPriority            = newDerivedFieldLabel("Component Risk Priority", ComponentRiskScore, SimpleReverseSortDerivationType)
+	NodePriority       = newDerivedFieldLabel("Node Risk Priority", NodeRiskScore, SimpleReverseSortDerivationType)
+	DeploymentPriority = newDerivedFieldLabel("Deployment Risk Priority", DeploymentRiskScore, SimpleReverseSortDerivationType)
+	ImagePriority      = newDerivedFieldLabel("Image Risk Priority", ImageRiskScore, SimpleReverseSortDerivationType)
+	ComponentPriority  = newDerivedFieldLabel("Component Risk Priority", ComponentRiskScore, SimpleReverseSortDerivationType)
+
+	// Custom derived fields to support query aliases.  These fields are only supported in pagination sort options.
 	CompliancePassCount          = newDerivedFieldLabelWithType("Compliance Pass Count", ComplianceOperatorCheckStatus, CustomFieldType, postgres.Integer)
 	ComplianceFailCount          = newDerivedFieldLabelWithType("Compliance Fail Count", ComplianceOperatorCheckStatus, CustomFieldType, postgres.Integer)
 	ComplianceErrorCount         = newDerivedFieldLabelWithType("Compliance Error Count", ComplianceOperatorCheckStatus, CustomFieldType, postgres.Integer)
