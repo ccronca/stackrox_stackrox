@@ -11,7 +11,6 @@ import (
 	searchPkg "github.com/stackrox/rox/pkg/search"
 	"github.com/stackrox/rox/pkg/search/postgres/aggregatefunc"
 	pgsearch "github.com/stackrox/rox/pkg/search/postgres/query"
-	"github.com/stackrox/rox/pkg/utils"
 )
 
 func populatePagination(querySoFar *query, pagination *v1.QueryPagination, schema *walker.Schema, queryFields map[string]searchFieldMetadata) error {
@@ -80,7 +79,7 @@ func populatePagination(querySoFar *query, pagination *v1.QueryPagination, schem
 			case searchPkg.CustomFieldType:
 				aliasString := strings.Join(strings.Fields(so.GetField()), "_")
 				if _, exists := selectMap[aliasString]; !exists {
-					utils.Should(errors.Errorf("Unsupported derived field %s found in pagination.  Will be ignored", so.GetField()))
+					log.Errorf("Unsupported derived field %s found in pagination. Will be ignored", so.GetField())
 					continue
 				}
 
