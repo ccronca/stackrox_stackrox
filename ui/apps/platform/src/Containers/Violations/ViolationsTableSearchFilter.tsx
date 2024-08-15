@@ -15,13 +15,14 @@ import {
     LifecycleStage as PolicyLifecycleStage,
     Severity as PolicySeverity,
     EnforcementAction as PolicyEnforcementAction,
-    InactiveDeployment as AlertInactiveDeployment,
-    ViolationTime as AlertViolationTime,
-    EntityType as AlertEntityType,
 } from 'Components/CompoundSearchFilter/attributes/policy';
 import {
-    ID as ClusterID,
+    ViolationTime as AlertViolationTime,
+    EntityType as AlertEntityType,
+} from 'Components/CompoundSearchFilter/attributes/alert';
+import {
     Name as ClusterName,
+    ID as ClusterID,
 } from 'Components/CompoundSearchFilter/attributes/cluster';
 import {
     ID as NamespaceID,
@@ -30,6 +31,7 @@ import {
 import {
     ID as DeploymentID,
     Name as DeploymentName,
+    Inactive as DeploymentInactive,
 } from 'Components/CompoundSearchFilter/attributes/deployment';
 
 const searchFilterConfig: CompoundSearchFilterConfig = [
@@ -42,25 +44,27 @@ const searchFilterConfig: CompoundSearchFilterConfig = [
             PolicySeverity,
             PolicyLifecycleStage,
             PolicyEnforcementAction,
-            AlertInactiveDeployment,
-            AlertViolationTime,
-            AlertEntityType,
         ],
+    },
+    {
+        displayName: 'Policy violation',
+        searchCategory: 'ALERTS',
+        attributes: [AlertViolationTime, AlertEntityType],
     },
     {
         displayName: 'Cluster',
         searchCategory: 'ALERTS',
-        attributes: [ClusterID, ClusterName],
+        attributes: [ClusterName, ClusterID],
     },
     {
         displayName: 'Namespace',
         searchCategory: 'ALERTS',
-        attributes: [NamespaceID, NamespaceName],
+        attributes: [NamespaceName, NamespaceID],
     },
     {
         displayName: 'Deployment',
         searchCategory: 'ALERTS',
-        attributes: [DeploymentID, DeploymentName],
+        attributes: [DeploymentName, DeploymentID, DeploymentInactive],
     },
 ];
 
